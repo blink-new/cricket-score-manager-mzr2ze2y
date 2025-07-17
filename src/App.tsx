@@ -5,6 +5,7 @@ import { Input } from './components/ui/input'
 import { Label } from './components/ui/label'
 import { Textarea } from './components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './components/ui/alert-dialog'
 import { Badge } from './components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Plus, Trophy, Users, Calendar, Target, Play, Edit, Trash2 } from 'lucide-react'
@@ -264,6 +265,55 @@ function App() {
     ))
   }
 
+  const handleDeleteTournament = (tournamentId: string) => {
+    // Remove tournament and all associated data
+    setTournaments(prev => prev.filter(t => t.id !== tournamentId))
+    setMatches(prev => prev.filter(m => m.tournamentId !== tournamentId))
+    const tournamentTeams = teams.filter(t => t.tournamentId === tournamentId)
+    const teamIds = tournamentTeams.map(t => t.id)
+    setTeams(prev => prev.filter(t => t.tournamentId !== tournamentId))
+    setPlayers(prev => prev.filter(p => !teamIds.includes(p.teamId)))
+    
+    // Clear selections if they were deleted
+    if (selectedTournament?.id === tournamentId) {
+      setSelectedTournament(null)
+    }
+    if (selectedTeam && teamIds.includes(selectedTeam.id)) {
+      setSelectedTeam(null)
+    }
+    if (selectedMatch && selectedMatch.tournamentId === tournamentId) {
+      setSelectedMatch(null)
+    }
+  }
+
+  const handleDeleteTeam = (teamId: string) => {
+    // Remove team and all associated data
+    setTeams(prev => prev.filter(t => t.id !== teamId))
+    setPlayers(prev => prev.filter(p => p.teamId !== teamId))
+    setMatches(prev => prev.filter(m => m.team1Id !== teamId && m.team2Id !== teamId))
+    
+    // Clear selections if they were deleted
+    if (selectedTeam?.id === teamId) {
+      setSelectedTeam(null)
+    }
+    if (selectedMatch && (selectedMatch.team1Id === teamId || selectedMatch.team2Id === teamId)) {
+      setSelectedMatch(null)
+    }
+  }
+
+  const handleDeletePlayer = (playerId: string) => {
+    setPlayers(prev => prev.filter(p => p.id !== playerId))
+  }
+
+  const handleDeleteMatch = (matchId: string) => {
+    setMatches(prev => prev.filter(m => m.id !== matchId))
+    
+    // Clear selection if it was deleted
+    if (selectedMatch?.id === matchId) {
+      setSelectedMatch(null)
+    }
+  }
+
   const getTeamsForTournament = (tournamentId: string) => {
     return teams.filter(team => team.tournamentId === tournamentId)
   }
@@ -440,6 +490,30 @@ function App() {
                       >
                         View Matches
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{tournament.name}"? This will permanently remove the tournament and all associated teams, players, and matches. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteTournament(tournament.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete Tournament
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
@@ -526,13 +600,39 @@ function App() {
                           <span>{getPlayersForTeam(team.id).length} players</span>
                         </div>
                       </div>
-                      <Button 
-                        className="w-full mt-4" 
-                        variant="outline"
-                        onClick={() => setSelectedTeam(team)}
-                      >
-                        Manage Players
-                      </Button>
+                      <div className="flex space-x-2 mt-4">
+                        <Button 
+                          className="flex-1" 
+                          variant="outline"
+                          onClick={() => setSelectedTeam(team)}
+                        >
+                          Manage Players
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Team</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{team.name}"? This will permanently remove the team and all its players, and cancel any matches involving this team. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteTeam(team.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Team
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -595,9 +695,35 @@ function App() {
                               <p className="font-medium">{player.name}</p>
                               <p className="text-sm text-gray-600 capitalize">{player.role}</p>
                             </div>
-                            <Badge variant="outline" className="capitalize">
-                              {player.role}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className="capitalize">
+                                {player.role}
+                              </Badge>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove Player</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove "{player.name}" from the team? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeletePlayer(player.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Remove Player
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         ))}
                         {getPlayersForTeam(selectedTeam.id).length === 0 && (
@@ -739,6 +865,30 @@ function App() {
                               <Edit className="w-4 h-4 mr-1" />
                               Update Score
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Match</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this match between {team1?.name} and {team2?.name}? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteMatch(match.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete Match
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </CardContent>
