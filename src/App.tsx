@@ -916,8 +916,31 @@ function App() {
           <TabsContent value="scoring" className="space-y-6">
             {selectedMatch ? (
               <div className="space-y-6">
+                {/* Header with Match Status Indicator */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Live Scoring</h2>
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold text-gray-900">Live Scoring</h2>
+                    <div className="flex items-center space-x-2">
+                      {selectedMatch.status === 'live' && (
+                        <div className="flex items-center space-x-2 bg-red-50 px-3 py-1 rounded-full">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span className="text-red-700 font-medium text-sm">LIVE</span>
+                        </div>
+                      )}
+                      {selectedMatch.status === 'upcoming' && (
+                        <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1 rounded-full">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="text-blue-700 font-medium text-sm">UPCOMING</span>
+                        </div>
+                      )}
+                      {selectedMatch.status === 'completed' && (
+                        <div className="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-green-700 font-medium text-sm">COMPLETED</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <Button 
                     variant="outline" 
                     onClick={() => setSelectedMatch(null)}
@@ -925,114 +948,260 @@ function App() {
                     Back to Matches
                   </Button>
                 </div>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-center">
-                      {getTeamById(selectedMatch.team1Id)?.name} vs {getTeamById(selectedMatch.team2Id)?.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Team 1 Scoring */}
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-4">{getTeamById(selectedMatch.team1Id)?.name}</h3>
-                      <div className="grid grid-cols-3 gap-4">
+
+                {/* Main Scoreboard */}
+                <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 border border-green-100">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                    {/* Team 1 */}
+                    <div className="text-center lg:text-left">
+                      <div className="flex items-center justify-center lg:justify-start space-x-3 mb-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {getTeamById(selectedMatch.team1Id)?.shortName}
+                          </span>
+                        </div>
                         <div>
-                          <Label>Runs</Label>
+                          <h3 className="font-bold text-lg text-gray-900">
+                            {getTeamById(selectedMatch.team1Id)?.name}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center lg:justify-start space-x-2">
+                        <span className="text-4xl font-bold text-gray-900">
+                          {selectedMatch.team1Score}
+                        </span>
+                        <span className="text-2xl text-gray-600">
+                          /{selectedMatch.team1Wickets}
+                        </span>
+                        <span className="text-lg text-gray-500 ml-2">
+                          ({selectedMatch.team1Overs} ov)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* VS and Status */}
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-400 mb-2">VS</div>
+                      {selectedMatch.status === 'live' && (
+                        <div className="text-sm text-gray-600">
+                          {selectedMatch.currentInnings === 1 ? 
+                            `${getTeamById(selectedMatch.team1Id)?.shortName} batting` : 
+                            `${getTeamById(selectedMatch.team2Id)?.shortName} batting`
+                          }
+                        </div>
+                      )}
+                      {selectedMatch.status === 'completed' && (
+                        <div className="text-sm font-medium text-green-600">
+                          Match Completed
+                        </div>
+                      )}
+                      {selectedMatch.status === 'upcoming' && (
+                        <div className="text-sm text-blue-600">
+                          Match Not Started
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Team 2 */}
+                    <div className="text-center lg:text-right">
+                      <div className="flex items-center justify-center lg:justify-end space-x-3 mb-2">
+                        <div className="lg:order-2">
+                          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {getTeamById(selectedMatch.team2Id)?.shortName}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="lg:order-1">
+                          <h3 className="font-bold text-lg text-gray-900">
+                            {getTeamById(selectedMatch.team2Id)?.name}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center lg:justify-end space-x-2">
+                        <span className="text-4xl font-bold text-gray-900">
+                          {selectedMatch.team2Score}
+                        </span>
+                        <span className="text-2xl text-gray-600">
+                          /{selectedMatch.team2Wickets}
+                        </span>
+                        <span className="text-lg text-gray-500 ml-2">
+                          ({selectedMatch.team2Overs} ov)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Status Controls */}
+                <div className="flex justify-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant={selectedMatch.status === 'upcoming' ? 'default' : 'outline'}
+                    onClick={() => updateMatchScore(selectedMatch.id, 'status', 'upcoming' as any)}
+                    className={selectedMatch.status === 'upcoming' ? 'bg-blue-500 hover:bg-blue-600' : ''}
+                  >
+                    Upcoming
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={selectedMatch.status === 'live' ? 'default' : 'outline'}
+                    onClick={() => updateMatchScore(selectedMatch.id, 'status', 'live' as any)}
+                    className={selectedMatch.status === 'live' ? 'bg-red-500 hover:bg-red-600' : ''}
+                  >
+                    Start Live
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={selectedMatch.status === 'completed' ? 'default' : 'outline'}
+                    onClick={() => updateMatchScore(selectedMatch.id, 'status', 'completed' as any)}
+                    className={selectedMatch.status === 'completed' ? 'bg-green-500 hover:bg-green-600' : ''}
+                  >
+                    End Match
+                  </Button>
+                </div>
+
+                {/* Score Update Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Team 1 Scoring */}
+                  <Card className="border-blue-200 bg-blue-50/30">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">
+                            {getTeamById(selectedMatch.team1Id)?.shortName}
+                          </span>
+                        </div>
+                        <span>{getTeamById(selectedMatch.team1Id)?.name}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">Runs</Label>
                           <Input
                             type="number"
                             value={selectedMatch.team1Score}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team1Score', parseInt(e.target.value) || 0)}
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                         <div>
-                          <Label>Wickets</Label>
+                          <Label className="text-sm font-medium text-gray-700">Wickets</Label>
                           <Input
                             type="number"
                             value={selectedMatch.team1Wickets}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team1Wickets', parseInt(e.target.value) || 0)}
                             max="10"
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                         <div>
-                          <Label>Overs</Label>
+                          <Label className="text-sm font-medium text-gray-700">Overs</Label>
                           <Input
                             type="number"
                             step="0.1"
                             value={selectedMatch.team1Overs}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team1Overs', parseFloat(e.target.value) || 0)}
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Team 2 Scoring */}
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-4">{getTeamById(selectedMatch.team2Id)?.name}</h3>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center p-3 bg-white rounded-lg border">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {selectedMatch.team1Score}/{selectedMatch.team1Wickets}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ({selectedMatch.team1Overs} overs)
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Team 2 Scoring */}
+                  <Card className="border-red-200 bg-red-50/30">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">
+                            {getTeamById(selectedMatch.team2Id)?.shortName}
+                          </span>
+                        </div>
+                        <span>{getTeamById(selectedMatch.team2Id)?.name}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <Label>Runs</Label>
+                          <Label className="text-sm font-medium text-gray-700">Runs</Label>
                           <Input
                             type="number"
                             value={selectedMatch.team2Score}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team2Score', parseInt(e.target.value) || 0)}
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                         <div>
-                          <Label>Wickets</Label>
+                          <Label className="text-sm font-medium text-gray-700">Wickets</Label>
                           <Input
                             type="number"
                             value={selectedMatch.team2Wickets}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team2Wickets', parseInt(e.target.value) || 0)}
                             max="10"
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                         <div>
-                          <Label>Overs</Label>
+                          <Label className="text-sm font-medium text-gray-700">Overs</Label>
                           <Input
                             type="number"
                             step="0.1"
                             value={selectedMatch.team2Overs}
                             onChange={(e) => updateMatchScore(selectedMatch.id, 'team2Overs', parseFloat(e.target.value) || 0)}
+                            className="text-center font-bold text-lg"
                           />
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Match Status */}
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-4">Match Status</h3>
-                      <div className="flex space-x-4">
-                        <Button
-                          variant={selectedMatch.status === 'upcoming' ? 'default' : 'outline'}
-                          onClick={() => updateMatchScore(selectedMatch.id, 'status', 'upcoming' as any)}
-                        >
-                          Upcoming
-                        </Button>
-                        <Button
-                          variant={selectedMatch.status === 'live' ? 'default' : 'outline'}
-                          onClick={() => updateMatchScore(selectedMatch.id, 'status', 'live' as any)}
-                        >
-                          Live
-                        </Button>
-                        <Button
-                          variant={selectedMatch.status === 'completed' ? 'default' : 'outline'}
-                          onClick={() => updateMatchScore(selectedMatch.id, 'status', 'completed' as any)}
-                        >
-                          Completed
-                        </Button>
+                      <div className="text-center p-3 bg-white rounded-lg border">
+                        <div className="text-2xl font-bold text-red-600">
+                          {selectedMatch.team2Score}/{selectedMatch.team2Wickets}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ({selectedMatch.team2Overs} overs)
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Match Summary */}
+                {selectedMatch.status === 'completed' && (
+                  <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-xl font-bold text-green-800 mb-2">Match Result</h3>
+                      <p className="text-green-700">
+                        {selectedMatch.team1Score > selectedMatch.team2Score 
+                          ? `${getTeamById(selectedMatch.team1Id)?.name} won by ${selectedMatch.team1Score - selectedMatch.team2Score} runs`
+                          : selectedMatch.team2Score > selectedMatch.team1Score
+                          ? `${getTeamById(selectedMatch.team2Id)?.name} won by ${selectedMatch.team2Score - selectedMatch.team1Score} runs`
+                          : 'Match tied'
+                        }
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">
-                <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a match to score</h3>
-                <p className="text-gray-600 mb-4">Go to matches tab and click "Update Score" on any match</p>
-                <Button onClick={() => setActiveTab('matches')} variant="outline">
-                  Go to Matches
+                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Target className="w-10 h-10 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Select a match to score</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Choose any match from the matches tab and start updating live scores with our intuitive scoring interface
+                </p>
+                <Button onClick={() => setActiveTab('matches')} className="cricket-gradient">
+                  Browse Matches
                 </Button>
               </div>
             )}
